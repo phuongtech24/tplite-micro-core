@@ -24,4 +24,14 @@ public class AuthController {
         String token = authService.login(request);
         return ResponseEntity.ok(token);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<String> getMyInfo() {
+        // Lấy thông tin user đang đăng nhập từ SecurityContext (được lưu bởi Filter)
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        String role = authentication.getAuthorities().toString();
+        
+        return ResponseEntity.ok("Xin chào " + username + "! Quyền của bạn là: " + role);
+    }
 }
