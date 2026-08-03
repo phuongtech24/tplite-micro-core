@@ -42,7 +42,7 @@ public class AuthService {
             throw new RuntimeException("Sai mật khẩu rồi bạn ơi!");
         }
 
-        // Cấp Token
-        return jwtService.generateToken(user.getUsername());
+        // Cấp Token có chứa quyền (Role)
+        return jwtService.generateToken(user.getUsername(), user.getRole());
     }
 }
