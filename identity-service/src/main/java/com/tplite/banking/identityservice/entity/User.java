@@ -17,7 +17,4 @@ public class User {
 
     @Column(nullable = false)
     private String passwordHash;
-
-    @Column(nullable = false)
-    private String role = "ROLE_CUSTOMER"; // Mặc định ai đăng ký cũng là Khách hàng
 }

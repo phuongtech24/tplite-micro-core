@@ -33,7 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
-        String role = null;
+        java.util.List<String> authoritiesList = null;
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Cắt bỏ chữ "Bearer "
             try {
@@ -43,24 +44,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .build()
                         .parseClaimsJws(token)
                         .getBody();
-
+                
                 username = claims.getSubject();
-                role = (String) claims.get("role"); // Moi cái Quyền (Role) ra từ đây!
+                authoritiesList = (java.util.List<String>) claims.get("authorities"); 
             } catch (Exception e) {
                 System.out.println("Token giả mạo hoặc hết hạn!");
             }
         }
+
         // 3. Nếu Token chuẩn và chưa ai đăng nhập
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Cấp quyền cho user này vào hệ thống (RBAC áp dụng ở đây)
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
-
+            
+            java.util.List<SimpleGrantedAuthority> grantedAuthorities = java.util.Collections.emptyList();
+            if (authoritiesList != null) {
+                grantedAuthorities = authoritiesList.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    username, null, Collections.singletonList(authority));
-
+                    username, null, grantedAuthorities);
+            
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            // Ghi nhận: "User này đã xác thực thành công và có quyền ROLE_XXX"
+            
+            // Ghi nhận: "User này đã xác thực thành công và có quyền"
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
         // Cho đi tiếp vào các hàm bên trong

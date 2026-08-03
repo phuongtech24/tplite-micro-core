@@ -20,9 +20,9 @@ public class JwtService {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, java.util.List<String> authorities) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role); // Nhét quyền vào bên trong Token
+        claims.put("authorities", authorities); // Lưu toàn bộ Role và Permission vào Token
 
         return Jwts.builder()
                 .setClaims(claims)
