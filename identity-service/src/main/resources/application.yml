@@ -14,7 +14,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update # Tự động tạo bảng dựa vào code
+      ddl-auto: validate # Tắt chế độ tự tạo bảng của Hibernate để nhường cho Flyway
     show-sql: true # In câu lệnh SQL ra console để dễ học
     
   h2:
