@@ -1,0 +1,31 @@
+# Java & Spring Boot
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.log
+*.log.*
+
+# IDE (IntelliJ, VS Code, Eclipse)
+.idea/
+*.iml
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.springBeans
+
+# Mac/Windows System files
+.DS_Store
+Thumbs.db
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Thư mục bài học cá nhân (chỉ giữ ở local theo yêu cầu)
+docs/learning-notes/
