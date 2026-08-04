@@ -51,6 +51,12 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
+        <!-- AOP: Hỗ trợ Aspect-Oriented Programming -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- JWT Libraries -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

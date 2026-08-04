@@ -16,8 +16,24 @@ public class JwtService {
 
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;
 
+    private Key cachedKey;
+
+    // Giai đoạn 3: Sẵn sàng (Initialization)
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        System.out.println(">>> [VÒNG ĐỜI BEAN] JwtService đang khởi tạo: Đang băm Secret Key 1 lần duy nhất...");
+        this.cachedKey = Keys.hmacShaKeyFor(SECRET.getBytes());
+    }
+
+    // Giai đoạn 4: Phá hủy (Destruction)
+    @jakarta.annotation.PreDestroy
+    public void destroy() {
+        System.out.println(">>> [VÒNG ĐỜI BEAN] JwtService sắp bị tiêu diệt: Xóa Key khỏi RAM để bảo mật...");
+        this.cachedKey = null;
+    }
+
     private Key getSignKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
+        return this.cachedKey; // Tái sử dụng Key đã tạo từ lúc PostConstruct
     }
 
     public String generateToken(String username, java.util.List<String> authorities) {

@@ -1,4 +1,4 @@
-﻿# AGENTS.md - Learning Rules For TPLite Banking Microservices
+# AGENTS.md - Learning Rules For TPLite Banking Microservices
 
 ## Muc tieu cua du an
 
@@ -63,6 +63,7 @@ notification-service
 Kafka Outbox
 Redis
 Loan/Card/Audit
+API Gateway Global JWT Filter (Trạm kiểm soát vé tập trung)
 ```
 
 Ly do: v1 can hoc chac gateway, discovery, JWT, service-to-service HTTP va distributed transaction truoc.
@@ -208,3 +209,29 @@ User tra loi duoc cau phong van co ban
 ## Cau kim chi nam
 
 Hoc microservice khong phai la them that nhieu cong nghe, ma la hieu tung van de phat sinh khi tach monolith thanh nhieu service: routing, service discovery, config, security, network failure, transaction consistency, messaging, cache va observability.
+
+## Nhung kien thuc mo rong (Tu cac repo Bank Core tren Github)
+
+Dua tren viec khao sat cac du an Core Banking tieu chuan tren Github (nhu BankSystemMicroservices, Online Banking Microservices), duoi day la danh sach cac kien thuc va kien truc nang cao ban co the ap dung cho du an nay sau khi da hoan thanh V1:
+
+1. **Event-Driven Architecture (EDA) & Message Broker**:
+   - Su dung Apache Kafka hoac RabbitMQ de cac service giao tiep bat dong bo (Asynchronous).
+   - Vi du: Khi TransferService chuyen tien xong, no ban ra mot su kien `TransferCompletedEvent`, NotificationService se lang nghe va gui Email/SMS ma khong lam nghen request cua User.
+
+2. **Distributed Transaction (Giao dich phan tan) voi SAGA Pattern**:
+   - Giai quyet bai toan: Lam sao de commit hoac rollback giao dich khi no lien quan den nhieu Service khac nhau (vi du: tru tien o AccountService A, cong tien o AccountService B nhung mang bi loi giua chung).
+   - Ket hop voi Kafka Outbox Pattern de dam bao khong bao gio mat data (Eventual Consistency).
+
+3. **CQRS (Command Query Responsibility Segregation)**:
+   - Tach biet hoan toan logic Ghi (Command) va logic Doc (Query).
+   - Ghi data vao MariaDB/PostgreSQL, sau do dong bo data sang Elasticsearch hoac MongoDB de toi uu toc do doc/tim kiem lich su giao dich.
+
+4. **Observability & Distributed Tracing (Giam sat he thong)**:
+   - Khi co mot Request bi loi 500, lam sao biet no dang chet o Gateway, Identity hay Account service?
+   - Tich hop **Zipkin/Jaeger** (Trace Request), **Prometheus & Grafana** (Ve bieu do Monitor CPU/RAM/Request cua tung service), va **ELK Stack** (Gom log tap trung).
+
+5. **Clean Architecture & Domain-Driven Design (DDD)**:
+   - Chia cau truc code thanh cac lop tach biet (Domain, Application, Infrastructure, Presentation) de dam bao code loi (Loi ngan hang) khong bi phu thuoc vao bat ky Framework nao.
+
+6. **Identity Provider (SSO)**:
+   - Thay the viec tu build Identity Service bang cach tich hop **Keycloak** hoac **OAuth2/OpenID Connect**, giup ho tro xac thuc 2 lop (2FA), Social Login.
