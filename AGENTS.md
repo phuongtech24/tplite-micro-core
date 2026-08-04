@@ -174,6 +174,58 @@ Transfer-service goi account-service
 Cung Idempotency-Key khong tru tien 2 lan
 ```
 
+### Phase 6 - API Gateway Global JWT Filter (Trạm kiểm soát vé)
+
+Hoc:
+
+```text
+Spring Cloud Gateway Global Filter
+Boc tach JWT o Gateway thay vi tung Service
+Bao mat tap trung
+```
+
+Output:
+
+```text
+Gateway tu dong chan request khong co token (tra ve 401)
+Cac service ben trong duoc go bo code kiem tra Token (giam tai)
+```
+
+### Phase 7 - Event-Driven Architecture (Kafka & Outbox Pattern)
+
+Hoc:
+
+```text
+Message Broker la gi? Apache Kafka
+Giao tiep bat dong bo (Asynchronous)
+Transactional Outbox Pattern de chong mat event
+```
+
+Output:
+
+```text
+Transfer-service gui event vao Kafka sau khi chuyen tien
+Notification-service lang nghe event va in ra log gui Email
+Tra response cho user nhanh gap doi
+```
+
+### Phase 8 - SAGA Pattern (Distributed Transaction Nang Cao)
+
+Hoc:
+
+```text
+SAGA Choreography vs Orchestration
+Compensating Transaction (Giao dich bu tru / Hoan tien)
+```
+
+Output:
+
+```text
+Bo luong goi HTTP dong bo o Phase 5
+Dung Kafka de tru tien -> cong tien. Neu cong tien bi loi, tu dong ban event hoan tien ve lai cho nguoi gui.
+Dam bao Eventual Consistency (Nhat quan cuoi)
+```
+
 ## Cach hoi AI de hoc tot
 
 Nen hoi:
