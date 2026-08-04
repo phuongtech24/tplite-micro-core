@@ -23,7 +23,7 @@ services:
 
   # Apache Kafka (Chế độ KRaft - Không cần Zookeeper)
   kafka:
-    image: bitnami/kafka:3.5
+    image: bitnami/kafka:latest
     container_name: banking_kafka
     ports:
       - "9092:9092"

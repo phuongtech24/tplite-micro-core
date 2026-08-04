@@ -8,6 +8,9 @@ import com.tplite.banking.transferservice.entity.Transfer;
 import com.tplite.banking.transferservice.repository.IdempotencyKeyRepository;
 import com.tplite.banking.transferservice.repository.TransferRepository;
 import com.tplite.banking.transferservice.service.TransferService;
+import com.tplite.banking.transferservice.entity.OutboxEvent;
+import com.tplite.banking.transferservice.repository.OutboxEventRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,7 @@ public class TransferServiceImpl implements TransferService {
 
     private final TransferRepository transferRepository;
     private final IdempotencyKeyRepository idempotencyKeyRepository;
+    private final OutboxEventRepository outboxEventRepository;
     private final AccountClient accountClient; // Vũ khí gọi HTTP sang Account Service
 
     @Transactional
@@ -48,9 +52,20 @@ public class TransferServiceImpl implements TransferService {
                 .status("PENDING")
                 .description("Chuyển tiền từ " + fromAccount + " sang " + toAccount)
                 .build();
-        transferRepository.save(transfer);
+        transfer = transferRepository.save(transfer);
 
-        // 3. GỌI SANG ACCOUNT SERVICE ĐỂ ĐÓNG BĂNG TIỀN (Giao tiếp HTTP đồng bộ)
+        // 3. LƯU SỰ KIỆN VÀO OUTBOX BẢNG (Đảm bảo Transactional chung với lệnh save Transfer)
+        OutboxEvent event = new OutboxEvent();
+        event.setId(UUID.randomUUID().toString());
+        event.setAggregateType("Transfer");
+        event.setAggregateId(transfer.getId().toString());
+        event.setType("TransferCreated");
+        // Payload có thể là chuỗi JSON chứa thông tin chi tiết. Để đơn giản ta nhét 1 câu thông báo.
+        event.setPayload(String.format("{\"transferId\":\"%s\", \"from\":\"%s\", \"to\":\"%s\", \"amount\":%s}", 
+                transfer.getId(), fromAccount, toAccount, amount));
+        outboxEventRepository.save(event);
+
+        // 4. GỌI SANG ACCOUNT SERVICE ĐỂ ĐÓNG BĂNG TIỀN (Giao tiếp HTTP đồng bộ)
         try {
             // Thực thi RPC qua OpenFeign
             ApiResponse<String> holdResponse = accountClient.holdMoney(fromAccount, amount);
