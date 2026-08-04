@@ -12,7 +12,8 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    private static final String SECRET = "DayLaChieuKhoaBiMatSieuCapVipProCuaTPLiteBankingSystem";
+    @org.springframework.beans.factory.annotation.Value("${jwt.secret}")
+    private String secret;
 
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;
 
@@ -22,7 +23,7 @@ public class JwtService {
     @jakarta.annotation.PostConstruct
     public void init() {
         System.out.println(">>> [VÒNG ĐỜI BEAN] JwtService đang khởi tạo: Đang băm Secret Key 1 lần duy nhất...");
-        this.cachedKey = Keys.hmacShaKeyFor(SECRET.getBytes());
+        this.cachedKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     // Giai đoạn 4: Phá hủy (Destruction)
