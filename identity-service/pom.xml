@@ -15,6 +15,13 @@
     <description>Identity and Access Management Service</description>
 
     <dependencies>
+        <!-- Common Lib -->
+        <dependency>
+            <groupId>com.tplite.banking</groupId>
+            <artifactId>common-lib</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
