@@ -2,7 +2,10 @@ package com.tplite.banking.accountservice.service;
 
 import java.math.BigDecimal;
 
+import com.tplite.banking.accountservice.entity.Account;
+
 public interface AccountService {
+    Account getAccountByNumber(String accountNumber);
     void holdMoney(String accountNumber, BigDecimal amount);
     void clearMoney(String accountNumber, BigDecimal amount);
     void releaseMoney(String accountNumber, BigDecimal amount);

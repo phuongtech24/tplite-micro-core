@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.math.BigDecimal;
 
 @Service
@@ -18,7 +20,15 @@ public class AccountServiceImpl implements AccountService {
     
     private final AccountRepository accountRepository;
 
+    @Override
+    @Cacheable(value = "account", key = "#accountNumber")
+    public Account getAccountByNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
+    }
+
     @Transactional
+    @CacheEvict(value = "account", key = "#accountNumber")
     public void holdMoney(String accountNumber, BigDecimal amount) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -27,6 +37,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Transactional
+    @CacheEvict(value = "account", key = "#accountNumber")
     public void clearMoney(String accountNumber, BigDecimal amount) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -35,6 +46,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Transactional
+    @CacheEvict(value = "account", key = "#accountNumber")
     public void releaseMoney(String accountNumber, BigDecimal amount) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -43,6 +55,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Transactional
+    @CacheEvict(value = "account", key = "#accountNumber")
     public void creditMoney(String accountNumber, BigDecimal amount) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -51,6 +64,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Transactional
+    @CacheEvict(value = "account", key = "#accountNumber")
     public void deductMoney(String accountNumber, BigDecimal amount) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -59,6 +73,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Transactional
+    @CacheEvict(value = "account", key = "#accountNumber")
     public void updateStatus(String accountNumber, String statusStr) {
         AccountStatus newStatus = AccountStatus.valueOf(statusStr.toUpperCase());
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
