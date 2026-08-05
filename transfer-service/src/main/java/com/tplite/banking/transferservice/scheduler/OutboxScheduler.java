@@ -25,8 +25,8 @@ public class OutboxScheduler {
 
         for (OutboxEvent event : events) {
             try {
-                // Ném vào Kafka, Topic "transfer-events"
-                kafkaTemplate.send("transfer-events", event.getPayload());
+                // Ném vào Kafka, Topic = event.getType() (ví dụ: credit-requested)
+                kafkaTemplate.send(event.getType(), event.getPayload());
 
                 // Gửi xong thì xóa khỏi bảng Outbox để lần sau không gửi lại
                 outboxEventRepository.delete(event);

@@ -43,47 +43,37 @@ public class TransferServiceImpl implements TransferService {
                 .build();
         idempotencyKeyRepository.save(newKey);
 
-        // 2. GHI NHẬN GIAO DỊCH (Trạng thái PENDING)
+        // 2. GỌI SANG ACCOUNT SERVICE ĐỂ TRỪ TIỀN (Giao tiếp HTTP đồng bộ - SAGA Step 1)
+        try {
+            ApiResponse<String> deductResponse = accountClient.deductMoney(fromAccount, amount);
+            if (!deductResponse.isSuccess()) {
+                throw new BusinessException("Account Service từ chối: " + deductResponse.getMessage());
+            }
+        } catch (Exception e) {
+            throw new BusinessException("Lỗi trừ tiền (Số dư không đủ hoặc rớt mạng): " + e.getMessage());
+        }
+
+        // 3. GHI NHẬN GIAO DỊCH (Trạng thái PROCESSING)
         Transfer transfer = Transfer.builder()
                 .fromAccount(fromAccount)
                 .toAccount(toAccount)
                 .amount(amount)
                 .currency("VND")
-                .status("PENDING")
+                .status("PROCESSING")
                 .description("Chuyển tiền từ " + fromAccount + " sang " + toAccount)
                 .build();
         transfer = transferRepository.save(transfer);
 
-        // 3. LƯU SỰ KIỆN VÀO OUTBOX BẢNG (Đảm bảo Transactional chung với lệnh save Transfer)
+        // 4. LƯU SỰ KIỆN VÀO OUTBOX BẢNG ĐỂ KÍCH HOẠT CỘNG TIỀN
         OutboxEvent event = new OutboxEvent();
         event.setId(UUID.randomUUID().toString());
         event.setAggregateType("Transfer");
         event.setAggregateId(transfer.getId().toString());
-        event.setType("TransferCreated");
-        // Payload có thể là chuỗi JSON chứa thông tin chi tiết. Để đơn giản ta nhét 1 câu thông báo.
-        event.setPayload(String.format("{\"transferId\":\"%s\", \"from\":\"%s\", \"to\":\"%s\", \"amount\":%s}", 
-                transfer.getId(), fromAccount, toAccount, amount));
+        event.setType("credit-requested");
+        event.setPayload(String.format("{\"transferId\":\"%s\", \"toAccount\":\"%s\", \"amount\":%s}", 
+                transfer.getId(), toAccount, amount));
         outboxEventRepository.save(event);
 
-        // 4. GỌI SANG ACCOUNT SERVICE ĐỂ ĐÓNG BĂNG TIỀN (Giao tiếp HTTP đồng bộ)
-        try {
-            // Thực thi RPC qua OpenFeign
-            ApiResponse<String> holdResponse = accountClient.holdMoney(fromAccount, amount);
-            
-            if (holdResponse.isSuccess()) {
-                // Tạm thời dừng ở trạng thái PENDING. 
-                // Thực tế phải gọi tiếp clear(from) và credit(to), nhưng mình sẽ nâng cấp sau bằng Kafka.
-                return "Đã yêu cầu Account Service đóng băng tiền thành công! Giao dịch đang chờ xử lý.";
-            } else {
-                transfer.setStatus("FAILED");
-                transferRepository.save(transfer);
-                throw new BusinessException("Account Service từ chối: " + holdResponse.getMessage());
-            }
-        } catch (Exception e) {
-            // Lỗi khi rớt mạng hoặc Account Service bị sập
-            transfer.setStatus("FAILED");
-            transferRepository.save(transfer);
-            throw new BusinessException("Lỗi kết nối đến Account Service (Rớt mạng/Timeout): " + e.getMessage());
-        }
+        return "Giao dịch đang được xử lý (SAGA Step 1 thành công)!";
     }
 }

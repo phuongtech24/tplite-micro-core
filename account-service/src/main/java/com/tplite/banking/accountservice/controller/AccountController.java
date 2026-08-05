@@ -37,4 +37,10 @@ public class AccountController {
         accountService.creditMoney(accountNumber, amount);
         return ApiResponse.success("Đã cộng tiền thành công " + amount + " VND");
     }
+
+    @PostMapping("/{accountNumber}/deduct")
+    public ApiResponse<String> deduct(@PathVariable String accountNumber, @RequestParam BigDecimal amount) {
+        accountService.deductMoney(accountNumber, amount);
+        return ApiResponse.success("Đã trừ tiền thành công " + amount + " VND");
+    }
 }

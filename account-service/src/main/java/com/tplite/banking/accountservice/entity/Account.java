@@ -77,4 +77,15 @@ public class Account {
         this.balance = this.balance.add(amount);
     }
 
+    // Trừ tiền trực tiếp (Dùng cho SAGA Bước 1)
+    public void deduct(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Số tiền phải lớn hơn 0");
+        }
+        if (getAvailableBalance().compareTo(amount) < 0) {
+            throw new IllegalStateException("Số dư khả dụng không đủ");
+        }
+        this.balance = this.balance.subtract(amount);
+    }
+
 }

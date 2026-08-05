@@ -7,4 +7,5 @@ public interface AccountService {
     void clearMoney(String accountNumber, BigDecimal amount);
     void releaseMoney(String accountNumber, BigDecimal amount);
     void creditMoney(String accountNumber, BigDecimal amount);
+    void deductMoney(String accountNumber, BigDecimal amount);
 }

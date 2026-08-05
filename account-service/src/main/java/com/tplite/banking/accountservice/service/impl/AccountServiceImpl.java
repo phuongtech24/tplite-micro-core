@@ -46,4 +46,12 @@ public class AccountServiceImpl implements AccountService {
         account.credit(amount);
         accountRepository.save(account);
     }
+
+    @Transactional
+    public void deductMoney(String accountNumber, BigDecimal amount) {
+        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        account.deduct(amount);
+        accountRepository.save(account);
+    }
 }
