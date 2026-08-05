@@ -9,6 +9,9 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.validation.FieldError;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -18,12 +21,15 @@ public class GlobalExceptionHandler {
     // 1. Lỗi Validation (Khi người dùng truyền thiếu Data hoặc sai Format)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String message = ex.getBindingResult().getAllErrors().stream()
-                .map(error -> error.getDefaultMessage())
-                .collect(Collectors.joining("; "));
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.put(error.getField(), error.getDefaultMessage());
+        }
 
-        log.warn("Validation error at {}: {}", request.getRequestURI(), message);
-        return buildError(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message, request);
+        log.warn("Validation error at {}: {}", request.getRequestURI(), errors);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), "VALIDATION_ERROR", "Dữ liệu đầu vào không hợp lệ", request.getRequestURI(), errors));
     }
 
     // 2. Lỗi Logic Nghiệp vụ chuẩn (Do chúng ta chủ động quăng ra)

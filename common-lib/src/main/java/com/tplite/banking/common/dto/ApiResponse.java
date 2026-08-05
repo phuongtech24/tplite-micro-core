@@ -17,6 +17,7 @@ public class ApiResponse<T> {
     private String code;
     private String message;
     private T data;
+    private Object details; // Chứa danh sách lỗi chi tiết (nếu có)
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
     private String path;
@@ -48,6 +49,17 @@ public class ApiResponse<T> {
                 .code(code)
                 .message(message)
                 .path(path)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(int status, String code, String message, String path, Object details) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .status(status)
+                .code(code)
+                .message(message)
+                .path(path)
+                .details(details)
                 .build();
     }
 }
