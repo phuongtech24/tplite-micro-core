@@ -5,22 +5,20 @@ spring:
   application:
     name: identity-service
     
-  # Cấu hình Database H2 chạy trên RAM
+  # Cấu hình Database Oracle 23c Free
   datasource:
-    url: jdbc:h2:mem:identitydb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: system
+    password: oracle
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
-      ddl-auto: validate # Tắt chế độ tự tạo bảng của Hibernate để nhường cho Flyway
-    show-sql: true # In câu lệnh SQL ra console để dễ học
+      ddl-auto: update # Bật Hibernate tự tạo bảng cho Oracle
+    show-sql: true
     
-  h2:
-    console:
-      enabled: true # Mở giao diện web để xem database
-      path: /h2-console
+  flyway:
+    enabled: false # Tạm tắt Flyway vì script hiện tại không tương thích Oracle
 
 eureka:
   client:

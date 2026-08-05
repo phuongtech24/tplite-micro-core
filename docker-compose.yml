@@ -1,16 +1,27 @@
 version: '3.8'
 services:
-  # MariaDB Database (Tương thích MySQL)
-  mariadb:
-    image: mariadb:11.7.2
-    container_name: banking_db
+  # MariaDB Database (Tạm ẩn để chuyển sang Oracle)
+  # mariadb:
+  #   image: mariadb:11.7.2
+  #   container_name: banking_db
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: banking_identity
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mariadb_data:/var/lib/mysql
+
+  # Oracle Database 23c Free Edition (Core Banking Standard)
+  oracle-db:
+    image: gvenzl/oracle-free:latest
+    container_name: banking_oracle
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: banking_identity
+      - ORACLE_PASSWORD=oracle
     ports:
-      - "3306:3306"
+      - "1521:1521"
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - oracle_data:/opt/oracle/oradata
 
   # Redis Cache
   redis:
@@ -46,5 +57,6 @@ services:
 
 volumes:
   mariadb_data:
+  oracle_data:
   redis_data:
   kafka_data:

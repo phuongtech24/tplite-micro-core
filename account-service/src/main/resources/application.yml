@@ -5,18 +5,17 @@ spring:
   application:
     name: account-service
   datasource:
-    url: jdbc:h2:file:./accountdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
+    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: system
+    password: oracle
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
-      ddl-auto: validate # Tắt chế độ tự tạo bảng, dùng Flyway
+      ddl-auto: update
     show-sql: true
-  h2:
-    console:
-      enabled: true
+  flyway:
+    enabled: false
 
 eureka:
   client:
