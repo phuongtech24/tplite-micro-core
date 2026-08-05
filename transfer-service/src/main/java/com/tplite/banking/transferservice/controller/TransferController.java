@@ -4,7 +4,8 @@ import com.tplite.banking.common.dto.ApiResponse;
 import com.tplite.banking.transferservice.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
+import com.tplite.banking.transferservice.entity.Transfer;
 import java.math.BigDecimal;
 
 @RestController
@@ -23,5 +24,15 @@ public class TransferController {
             
         String result = transferService.createTransfer(idempotencyKey, fromAccount, toAccount, amount);
         return ApiResponse.success(result);
+    }
+
+    @GetMapping("/history")
+    public ApiResponse<Page<Transfer>> getHistory(
+            @RequestParam String accountNumber,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Page<Transfer> history = transferService.getTransactionHistory(accountNumber, page, size);
+        return ApiResponse.success(history);
     }
 }

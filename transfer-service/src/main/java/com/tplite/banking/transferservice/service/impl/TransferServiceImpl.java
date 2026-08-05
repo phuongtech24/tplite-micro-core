@@ -20,6 +20,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -83,5 +86,12 @@ public class TransferServiceImpl implements TransferService {
 
     public String fallbackCreateTransfer(String idempotencyKeyStr, String fromAccount, String toAccount, BigDecimal amount, Throwable t) {
         return "Hệ thống Account Service hiện đang bận hoặc quá tải. Vui lòng thử lại sau ít phút!";
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Transfer> getTransactionHistory(String accountNumber, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return transferRepository.findTransactionHistory(accountNumber, pageable);
     }
 }
