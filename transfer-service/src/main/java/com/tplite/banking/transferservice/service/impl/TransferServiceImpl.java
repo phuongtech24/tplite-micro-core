@@ -15,6 +15,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -28,6 +29,7 @@ public class TransferServiceImpl implements TransferService {
     private final OutboxEventRepository outboxEventRepository;
     private final AccountClient accountClient; // Vũ khí gọi HTTP sang Account Service
 
+    @CircuitBreaker(name = "accountService", fallbackMethod = "fallbackCreateTransfer")
     @Transactional
     public String createTransfer(String idempotencyKeyStr, String fromAccount, String toAccount, BigDecimal amount) {
         
@@ -76,5 +78,9 @@ public class TransferServiceImpl implements TransferService {
         outboxEventRepository.save(event);
 
         return "Giao dịch đang được xử lý (SAGA Step 1 thành công)!";
+    }
+
+    public String fallbackCreateTransfer(String idempotencyKeyStr, String fromAccount, String toAccount, BigDecimal amount, Throwable t) {
+        return "Hệ thống Account Service hiện đang bận hoặc quá tải. Vui lòng thử lại sau ít phút!";
     }
 }

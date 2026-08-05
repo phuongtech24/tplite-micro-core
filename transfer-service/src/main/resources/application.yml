@@ -34,3 +34,16 @@ feign:
       default:
         connectTimeout: 5000
         readTimeout: 5000
+
+# Cấu hình Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+    instances:
+      accountService:
+        baseConfig: default
