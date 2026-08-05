@@ -8,11 +8,13 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+import com.tplite.banking.common.entity.BaseEntity;
+
 @Entity
 @Table(name = "outbox_events")
 @Getter
 @Setter
-public class OutboxEvent {
+public class OutboxEvent extends BaseEntity {
     
     @Id
     private String id; // UUID
@@ -23,6 +25,4 @@ public class OutboxEvent {
     
     // JSON payload
     private String payload;
-    
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

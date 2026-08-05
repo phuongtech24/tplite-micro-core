@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+import com.tplite.banking.common.entity.BaseEntity;
+
 @Entity
 @Table(name = "idempotency_keys")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class IdempotencyKey {
+public class IdempotencyKey extends BaseEntity {
 
     @Id
     @Column(name = "idempotency_key", length = 100)
@@ -25,11 +27,4 @@ public class IdempotencyKey {
     @Column(name = "response_body", columnDefinition = "TEXT")
     private String responseBody;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

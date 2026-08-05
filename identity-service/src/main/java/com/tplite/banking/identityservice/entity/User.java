@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.util.UUID;
 
+import com.tplite.banking.common.entity.BaseEntity;
+
 @Entity
 @Data
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

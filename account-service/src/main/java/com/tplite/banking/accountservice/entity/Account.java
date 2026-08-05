@@ -6,13 +6,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.tplite.banking.common.entity.BaseEntity;
+
 @Entity
 @Table(name = "accounts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Account {
+public class Account extends BaseEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

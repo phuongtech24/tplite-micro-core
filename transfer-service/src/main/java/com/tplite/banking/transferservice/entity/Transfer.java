@@ -6,13 +6,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.tplite.banking.common.entity.BaseEntity;
+
 @Entity
 @Table(name = "transfers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Transfer {
+public class Transfer extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -35,11 +37,4 @@ public class Transfer {
 
     private String description;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

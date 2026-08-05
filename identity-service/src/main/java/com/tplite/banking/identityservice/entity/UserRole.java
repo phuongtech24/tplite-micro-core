@@ -3,10 +3,12 @@ package com.tplite.banking.identityservice.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import com.tplite.banking.common.entity.BaseEntity;
+
 @Entity
 @Data
 @Table(name = "user_roles")
-public class UserRole {
+public class UserRole extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
