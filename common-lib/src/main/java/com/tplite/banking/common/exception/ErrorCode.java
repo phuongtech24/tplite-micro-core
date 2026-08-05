@@ -22,7 +22,8 @@ public enum ErrorCode {
     
     // Transfer Errors
     TRANSFER_FAILED(400, "TXN_001", "Giao dịch thất bại"),
-    DUPLICATE_IDEMPOTENCY(400, "TXN_002", "Giao dịch này đã được ghi nhận trước đó");
+    DUPLICATE_IDEMPOTENCY(400, "TXN_002", "Giao dịch này đã được ghi nhận trước đó"),
+    ACCOUNT_SERVICE_UNAVAILABLE(503, "TXN_003", "Dịch vụ Tài khoản tạm thời không khả dụng");
 
     private final int statusCode;
     private final String code;
