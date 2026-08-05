@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import com.tplite.banking.common.entity.BaseEntity;
 import com.tplite.banking.accountservice.enums.AccountStatus;
+import com.tplite.banking.common.exception.BusinessException;
+import com.tplite.banking.common.exception.ErrorCode;
 
 @Entity
 @Table(name = "accounts")
@@ -48,10 +50,10 @@ public class Account extends BaseEntity {
     // Đóng băng tiền khi chuẩn bị chuyển
     public void hold(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền phải lớn hơn 0");
+            throw new BusinessException(ErrorCode.INVALID_AMOUNT);
         }
         if (getAvailableBalance().compareTo(amount) < 0) {
-            throw new IllegalStateException("Số dư khả dụng không đủ");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE);
         }
         this.frozenAmount = this.frozenAmount.add(amount);
     }
@@ -76,7 +78,7 @@ public class Account extends BaseEntity {
     // Cộng tiền (Khi ai đó chuyển tiền tới)
     public void credit(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền phải lớn hơn 0");
+            throw new BusinessException(ErrorCode.INVALID_AMOUNT);
         }
         this.balance = this.balance.add(amount);
     }
@@ -84,10 +86,10 @@ public class Account extends BaseEntity {
     // Trừ tiền trực tiếp (Dùng cho SAGA Bước 1)
     public void deduct(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền phải lớn hơn 0");
+            throw new BusinessException(ErrorCode.INVALID_AMOUNT);
         }
         if (getAvailableBalance().compareTo(amount) < 0) {
-            throw new IllegalStateException("Số dư khả dụng không đủ");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE);
         }
         this.balance = this.balance.subtract(amount);
     }

@@ -5,6 +5,8 @@ import com.tplite.banking.identityservice.entity.*;
 import com.tplite.banking.identityservice.repository.*;
 import com.tplite.banking.identityservice.service.AuthService;
 import com.tplite.banking.identityservice.enums.RoleName;
+import com.tplite.banking.common.exception.BusinessException;
+import com.tplite.banking.common.exception.ErrorCode;
 import com.tplite.banking.identityservice.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public String register(AuthRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("Tên đăng nhập đã tồn tại!");
+            throw new BusinessException(ErrorCode.USER_EXISTED);
         }
 
         User user = new User();
@@ -62,10 +64,10 @@ public class AuthServiceImpl implements AuthService {
 
     public String login(AuthRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Sai mật khẩu rồi bạn ơi!");
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
         // 1. Lấy tất cả Roles của User

@@ -29,8 +29,11 @@ public class GlobalExceptionHandler {
     // 2. Lỗi Logic Nghiệp vụ chuẩn (Do chúng ta chủ động quăng ra)
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException ex, HttpServletRequest request) {
-        log.warn("Business error at {}: {}", request.getRequestURI(), ex.getMessage());
-        return buildError(HttpStatus.BAD_REQUEST, "BUSINESS_ERROR", ex.getMessage(), request);
+        ErrorCode errorCode = ex.getErrorCode();
+        log.warn("Business error at {}: {}", request.getRequestURI(), errorCode.getMessage());
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(ApiResponse.error(errorCode.getStatusCode(), errorCode.getCode(), errorCode.getMessage(), request.getRequestURI()));
     }
 
     // 3. Lỗi Gọi sai Method HTTP (Gọi POST thành GET)

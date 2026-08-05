@@ -2,6 +2,7 @@ package com.tplite.banking.transferservice.service.impl;
 
 import com.tplite.banking.common.dto.ApiResponse;
 import com.tplite.banking.common.exception.BusinessException;
+import com.tplite.banking.common.exception.ErrorCode;
 import com.tplite.banking.transferservice.enums.TransferStatus;
 import com.tplite.banking.transferservice.client.AccountClient;
 import com.tplite.banking.transferservice.entity.IdempotencyKey;
@@ -36,7 +37,7 @@ public class TransferServiceImpl implements TransferService {
         // 1. KIỂM TRA IDEMPOTENCY KEY (Chống người dùng bấm nút chuyển tiền 2 lần liên tục)
         Optional<IdempotencyKey> existingKey = idempotencyKeyRepository.findById(idempotencyKeyStr);
         if (existingKey.isPresent()) {
-            return "Giao dịch này đã được ghi nhận trước đó! Bỏ qua để tránh trừ tiền 2 lần.";
+            throw new BusinessException(ErrorCode.DUPLICATE_IDEMPOTENCY);
         }
 
         // Đánh dấu Key này đã được xài
@@ -50,10 +51,10 @@ public class TransferServiceImpl implements TransferService {
         try {
             ApiResponse<String> deductResponse = accountClient.deductMoney(fromAccount, amount);
             if (!deductResponse.isSuccess()) {
-                throw new BusinessException("Account Service từ chối: " + deductResponse.getMessage());
+                throw new BusinessException(ErrorCode.TRANSFER_FAILED);
             }
         } catch (Exception e) {
-            throw new BusinessException("Lỗi trừ tiền (Số dư không đủ hoặc rớt mạng): " + e.getMessage());
+            throw new BusinessException(ErrorCode.TRANSFER_FAILED);
         }
 
         // 3. GHI NHẬN GIAO DỊCH (Trạng thái PROCESSING)
