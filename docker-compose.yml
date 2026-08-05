@@ -22,6 +22,7 @@ services:
       - "1521:1521"
     volumes:
       - oracle_data:/opt/oracle/oradata
+      - ./init-db:/opt/oracle/scripts/startup
 
   # Redis Cache
   redis:

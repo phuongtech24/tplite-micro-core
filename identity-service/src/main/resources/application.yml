@@ -9,8 +9,8 @@ spring:
   datasource:
     url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
     driver-class-name: oracle.jdbc.OracleDriver
-    username: system
-    password: oracle
+    username: identity_db
+    password: password
   jpa:
     database-platform: org.hibernate.dialect.OracleDialect
     hibernate:
