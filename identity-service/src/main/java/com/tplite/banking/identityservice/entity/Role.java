@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import com.tplite.banking.common.entity.BaseEntity;
+import com.tplite.banking.identityservice.enums.RoleName;
 
 @Entity
 @Data
@@ -13,6 +14,7 @@ public class Role extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(unique = true, nullable = false)
-    private String name; // Ví dụ: ADMIN, CUSTOMER
+    private RoleName name; // ADMIN, CUSTOMER
 }

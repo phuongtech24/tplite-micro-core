@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.tplite.banking.common.entity.BaseEntity;
+import com.tplite.banking.accountservice.enums.AccountStatus;
 
 @Entity
 @Table(name = "accounts")
@@ -35,8 +36,9 @@ public class Account extends BaseEntity {
     @Column(nullable = false, length = 3)
     private String currency = "VND";
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "ACTIVE";
+    private AccountStatus status = AccountStatus.ACTIVE;
 
         // Tính số dư khả dụng
     public BigDecimal getAvailableBalance() {

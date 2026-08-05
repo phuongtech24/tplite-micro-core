@@ -4,6 +4,7 @@ import com.tplite.banking.identityservice.dto.AuthRequest;
 import com.tplite.banking.identityservice.entity.*;
 import com.tplite.banking.identityservice.repository.*;
 import com.tplite.banking.identityservice.service.AuthService;
+import com.tplite.banking.identityservice.enums.RoleName;
 import com.tplite.banking.identityservice.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,10 +45,10 @@ public class AuthServiceImpl implements AuthService {
         user = userRepository.save(user);
 
         // Gán Role mặc định là CUSTOMER
-        Role customerRole = roleRepository.findByName("CUSTOMER")
+        Role customerRole = roleRepository.findByName(RoleName.CUSTOMER)
                 .orElseGet(() -> {
                     Role r = new Role();
-                    r.setName("CUSTOMER");
+                    r.setName(RoleName.CUSTOMER);
                     return roleRepository.save(r);
                 });
 
@@ -74,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
         List<Long> roleIds = new ArrayList<>();
 
         for (UserRole ur : userRoles) {
-            authorities.add("ROLE_" + ur.getRole().getName());
+            authorities.add("ROLE_" + ur.getRole().getName().name());
             roleIds.add(ur.getRole().getId());
         }
 

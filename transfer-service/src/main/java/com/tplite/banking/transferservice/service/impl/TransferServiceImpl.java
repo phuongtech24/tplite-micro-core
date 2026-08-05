@@ -2,6 +2,7 @@ package com.tplite.banking.transferservice.service.impl;
 
 import com.tplite.banking.common.dto.ApiResponse;
 import com.tplite.banking.common.exception.BusinessException;
+import com.tplite.banking.transferservice.enums.TransferStatus;
 import com.tplite.banking.transferservice.client.AccountClient;
 import com.tplite.banking.transferservice.entity.IdempotencyKey;
 import com.tplite.banking.transferservice.entity.Transfer;
@@ -59,7 +60,7 @@ public class TransferServiceImpl implements TransferService {
                 .toAccount(toAccount)
                 .amount(amount)
                 .currency("VND")
-                .status("PROCESSING")
+                .status(TransferStatus.PROCESSING)
                 .description("Chuyển tiền từ " + fromAccount + " sang " + toAccount)
                 .build();
         transfer = transferRepository.save(transfer);

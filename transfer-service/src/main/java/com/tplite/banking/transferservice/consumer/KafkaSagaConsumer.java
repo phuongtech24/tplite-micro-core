@@ -3,6 +3,7 @@ package com.tplite.banking.transferservice.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tplite.banking.transferservice.client.AccountClient;
 import com.tplite.banking.transferservice.entity.Transfer;
+import com.tplite.banking.transferservice.enums.TransferStatus;
 import com.tplite.banking.transferservice.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class KafkaSagaConsumer {
             Optional<Transfer> transferOpt = transferRepository.findById(UUID.fromString(transferId));
             if (transferOpt.isPresent()) {
                 Transfer transfer = transferOpt.get();
-                transfer.setStatus("COMPLETED");
+                transfer.setStatus(TransferStatus.COMPLETED);
                 transferRepository.save(transfer);
                 log.info("✅ Đã chốt giao dịch {} thành COMPLETED.", transferId);
             }
@@ -52,7 +53,7 @@ public class KafkaSagaConsumer {
             Optional<Transfer> transferOpt = transferRepository.findById(UUID.fromString(transferId));
             if (transferOpt.isPresent()) {
                 Transfer transfer = transferOpt.get();
-                transfer.setStatus("FAILED");
+                transfer.setStatus(TransferStatus.FAILED);
                 transfer.setDescription("Hoàn tiền do lỗi cộng tiền: " + reason);
                 transferRepository.save(transfer);
 

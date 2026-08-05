@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.tplite.banking.common.entity.BaseEntity;
+import com.tplite.banking.transferservice.enums.TransferStatus;
 
 @Entity
 @Table(name = "transfers")
@@ -32,8 +33,9 @@ public class Transfer extends BaseEntity {
     @Column(nullable = false, length = 3)
     private String currency = "VND";
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status; // PENDING, SUCCESS, FAILED, ROLLBACKED
+    private TransferStatus status; // PENDING, SUCCESS, FAILED, ROLLBACKED
 
     private String description;
 
