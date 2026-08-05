@@ -8,4 +8,5 @@ public interface AccountService {
     void releaseMoney(String accountNumber, BigDecimal amount);
     void creditMoney(String accountNumber, BigDecimal amount);
     void deductMoney(String accountNumber, BigDecimal amount);
+    void updateStatus(String accountNumber, String statusStr);
 }

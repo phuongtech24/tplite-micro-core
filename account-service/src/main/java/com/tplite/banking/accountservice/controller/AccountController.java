@@ -1,7 +1,9 @@
 package com.tplite.banking.accountservice.controller;
 
+import com.tplite.banking.accountservice.dto.UpdateAccountStatusRequest;
 import com.tplite.banking.accountservice.service.AccountService;
 import com.tplite.banking.common.dto.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,5 +44,13 @@ public class AccountController {
     public ApiResponse<String> deduct(@PathVariable String accountNumber, @RequestParam BigDecimal amount) {
         accountService.deductMoney(accountNumber, amount);
         return ApiResponse.success("Đã trừ tiền thành công " + amount + " VND");
+    }
+
+    @PutMapping("/{accountNumber}/status")
+    public ApiResponse<String> updateStatus(
+            @PathVariable String accountNumber,
+            @Valid @RequestBody UpdateAccountStatusRequest request) {
+        accountService.updateStatus(accountNumber, request.getStatus());
+        return ApiResponse.success("Đã cập nhật trạng thái tài khoản thành công!");
     }
 }
