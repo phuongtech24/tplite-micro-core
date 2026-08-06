@@ -35,4 +35,17 @@ public class TransferController {
         Page<Transfer> history = transferService.getTransactionHistory(accountNumber, page, size);
         return ApiResponse.success(history);
     }
+
+    @GetMapping("/statement/count")
+    public ApiResponse<Long> countStatement(
+            @RequestParam String accountNumber,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        
+        java.time.LocalDateTime start = java.time.LocalDate.parse(startDate).atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.parse(endDate).atTime(23, 59, 59);
+        
+        long count = transferService.countTransactionsByDateRange(accountNumber, start, end);
+        return ApiResponse.success(count);
+    }
 }

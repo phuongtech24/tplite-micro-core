@@ -22,4 +22,7 @@ public interface TransferRepository extends JpaRepository<Transfer, UUID> {
                         ") AS t",
            nativeQuery = true)
     Page<Transfer> findTransactionHistory(@Param("accountNumber") String accountNumber, Pageable pageable);
+
+    @Query("SELECT COUNT(t) FROM Transfer t WHERE t.fromAccount = :accountNumber AND t.createdAt >= :startDate AND t.createdAt <= :endDate")
+    long countTransactionsByDateRange(@Param("accountNumber") String accountNumber, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
 }

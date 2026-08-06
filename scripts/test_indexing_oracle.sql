@@ -1,9 +1,15 @@
 -- KỊCH BẢN KIỂM THỬ HIỆU NĂNG DATABASE INDEXING TRÊN ORACLE (DÀNH CHO CV)
--- Hướng dẫn: Mở DBeaver/SQL Developer, kết nối vào Oracle, chạy từng khối lệnh.
+-- Hướng dẫn: Mở DBeaver, kết nối vào Oracle, đảm bảo đang ở Schema TRANSFER_DB.
+-- Đặt con trỏ chuột vào từng khối lệnh và bấm Ctrl + Enter để chạy.
+
+ALTER SESSION SET CURRENT_SCHEMA = TRANSFER_DB;
 
 -- ==========================================
--- BƯỚC 1: TẠO BẢNG GIẢ LẬP
+-- BƯỚC 1: XÓA CŨ VÀ TẠO BẢNG GIẢ LẬP
 -- ==========================================
+-- Chạy lệnh này nếu bảng đã tồn tại từ trước để xóa đi làm lại từ đầu
+-- DROP TABLE transfers;
+
 CREATE TABLE transfers (
     id RAW(16) DEFAULT SYS_GUID() PRIMARY KEY,
     from_account VARCHAR2(255),
@@ -13,18 +19,15 @@ CREATE TABLE transfers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Xóa dữ liệu & index cũ (nếu có)
--- TRUNCATE TABLE transfers;
--- DROP INDEX idx_transfer_accounts;
-
 -- ==========================================
 -- BƯỚC 2: BƠM 10 TRIỆU BẢN GHI BẰNG PL/SQL (Chạy mất khoảng 3-5 phút)
+-- Mẹo: Cứ để đó cho nó chạy xong 100 vòng.
 -- ==========================================
 DECLARE
     TYPE t_transfer IS TABLE OF transfers%ROWTYPE;
     v_transfers t_transfer := t_transfer();
 BEGIN
-    FOR i IN 1..100 LOOP -- Chạy 100 vòng, mỗi vòng 100.000 dòng = 10.000.000 dòng
+    FOR i IN 1..100 LOOP -- Chạy 100 vòng, mỗi vòng 100.000 dòng = 10 triệu dòng
         v_transfers.DELETE;
         FOR j IN 1..100000 LOOP
             v_transfers.EXTEND;
@@ -44,34 +47,31 @@ BEGIN
 END;
 /
 
--- Kiểm tra số lượng
--- SELECT count(*) FROM transfers;
+-- Kiểm tra xem đã đủ 10 triệu dòng chưa
+SELECT count(*) FROM transfers;
 
 -- ==========================================
 -- BƯỚC 3: TRUY VẤN KHI CHƯA CÓ INDEX (FULL TABLE SCAN)
 -- ==========================================
--- Lệnh này sẽ phân tích chiến thuật tìm kiếm của Oracle (Bạn bôi đen cả 2 dòng và chạy)
 EXPLAIN PLAN FOR
 SELECT * FROM transfers 
 WHERE from_account = '100050' OR to_account = '100050'
 ORDER BY created_at DESC
 FETCH FIRST 50 ROWS ONLY;
 
--- Chạy lệnh này để xem kết quả phân tích (Để ý cột "Cost" và chữ "TABLE ACCESS FULL")
+-- Xem kết quả (Cost sẽ rất cao ~ 28.000)
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
 
 -- ==========================================
 -- BƯỚC 4: TẠO INDEX ĐỂ TỐI ƯU HÓA MỆNH ĐỀ "OR"
--- Bẫy kinh điển: Lệnh OR làm vô hiệu hóa Composite Index.
--- Giải pháp: Phải tách thành 2 Index độc lập cho 2 cột.
+-- Giải pháp: Tách thành 2 Index độc lập cho 2 cột. (Mất khoảng 30-50s)
 -- ==========================================
-CREATE INDEX idx_transfer_from_account ON transfers(from_account);
-CREATE INDEX idx_transfer_to_account ON transfers(to_account);
+CREATE INDEX idx_transfers_from_account ON transfers(from_account);
+CREATE INDEX idx_transfers_to_account ON transfers(to_account);
 
 -- ==========================================
 -- BƯỚC 5: TRUY VẤN LẠI BẰNG "UNION ALL" (Tuyệt chiêu tối ưu)
 -- ==========================================
--- Chạy lệnh phân tích để thấy INDEX RANGE SCAN
 EXPLAIN PLAN FOR
 SELECT * FROM (
     SELECT * FROM transfers WHERE from_account = '100050'
@@ -81,5 +81,17 @@ SELECT * FROM (
 ORDER BY created_at DESC
 FETCH FIRST 50 ROWS ONLY;
 
--- Xem kết quả (Cost giảm, xuất hiện INDEX RANGE SCAN)
+-- Xem kết quả (Xuất hiện INDEX RANGE SCAN, Cost lấy dữ liệu giảm còn ~3)
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+-- ==========================================
+-- BƯỚC 6: CHẠY THẬT ĐỂ ĐO MILI-GIÂY
+-- Bôi đen toàn bộ lệnh dưới đây, nhìn xuống góc dưới cùng DBeaver để lấy số 0.0xx s
+-- ==========================================
+SELECT * FROM (
+    SELECT * FROM transfers WHERE from_account = '100050'
+    UNION ALL
+    SELECT * FROM transfers WHERE to_account = '100050'
+)
+ORDER BY created_at DESC
+FETCH FIRST 50 ROWS ONLY;

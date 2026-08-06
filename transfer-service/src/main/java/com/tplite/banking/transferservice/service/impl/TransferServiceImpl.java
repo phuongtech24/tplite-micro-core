@@ -94,4 +94,10 @@ public class TransferServiceImpl implements TransferService {
         Pageable pageable = PageRequest.of(page, size);
         return transferRepository.findTransactionHistory(accountNumber, pageable);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTransactionsByDateRange(String accountNumber, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
+        return transferRepository.countTransactionsByDateRange(accountNumber, startDate, endDate);
+    }
 }
