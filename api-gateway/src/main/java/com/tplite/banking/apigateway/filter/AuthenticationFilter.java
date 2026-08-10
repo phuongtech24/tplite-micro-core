@@ -46,11 +46,24 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         try {
             jwtUtil.validateToken(authHeader);
             
-            // Tùy chọn: Lấy Username nhét vào Header mới để các Service bên trong khỏi phải giải mã lại
+            // Lấy danh sách Quyền (Roles)
+            String roles = jwtUtil.extractRoles(authHeader);
+
+            // Tùy chọn: Lấy Username và Roles nhét vào Header mới để các Service bên trong khỏi phải giải mã lại
             String username = jwtUtil.extractUsername(authHeader);
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                     .header("X-User-Name", username)
+                    .header("X-User-Roles", roles)
                     .build();
+
+            // KỂM TRA QUYỀN (RBAC - TRAM KIỂM SOÁT TẠI CỔNG)
+            String path = request.getURI().getPath();
+            if (path.contains("/trial-balance")) {
+                if (!roles.contains("ROLE_ADMIN")) {
+                    exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN); // 403 Forbidden
+                    return exchange.getResponse().setComplete();
+                }
+            }
             
             // Cho qua trạm thu phí
             return chain.filter(exchange.mutate().request(modifiedRequest).build());

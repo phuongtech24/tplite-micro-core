@@ -20,4 +20,15 @@ public interface TransactionEntryRepository extends JpaRepository<TransactionEnt
            "END" +
            "), 0) FROM TransactionEntry t WHERE t.accountNumber = :accountNumber")
     BigDecimal calculateActualBalance(@Param("accountNumber") String accountNumber);
+
+    @Query("SELECT t.accountNumber, SUM(" +
+           "CASE " +
+           "  WHEN t.type = 'CREDIT' THEN t.amount " +
+           "  WHEN t.type = 'REVERSAL_CREDIT' THEN t.amount " +
+           "  WHEN t.type = 'DEBIT' THEN -t.amount " +
+           "  WHEN t.type = 'REVERSAL_DEBIT' THEN -t.amount " +
+           "  ELSE 0 " +
+           "END" +
+           ") FROM TransactionEntry t GROUP BY t.accountNumber")
+    java.util.List<Object[]> getTrialBalance();
 }

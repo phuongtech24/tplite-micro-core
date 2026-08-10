@@ -70,4 +70,19 @@ public class AccountController {
             (actualBalance.compareTo(currentBalance) == 0 ? "✅ KHỚP!" : "❌ LỆCH!")
         );
     }
+
+    @GetMapping("/trial-balance")
+    public ApiResponse<java.util.List<java.util.Map<String, Object>>> getTrialBalance() {
+        java.util.List<Object[]> results = transactionEntryRepository.getTrialBalance();
+        java.util.List<java.util.Map<String, Object>> response = new java.util.ArrayList<>();
+        
+        for (Object[] row : results) {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("accountNumber", row[0]);
+            map.put("ledgerBalance", row[1]);
+            response.add(map);
+        }
+        
+        return ApiResponse.success(response);
+    }
 }

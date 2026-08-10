@@ -34,10 +34,8 @@ public class KafkaSagaConsumer {
             if (transferOpt.isPresent()) {
                 Transfer transfer = transferOpt.get();
                 
-                // THỰC THI CLEAR TIỀN (Trừ tiền thật trên Ledger Balance)
-                log.info("🧹 Đang tiến hành CLEAR tiền (trừ tiền thật) cho tài khoản {}...", transfer.getFromAccount());
-                accountClient.clearMoney(transfer.getFromAccount(), transfer.getAmount(), transferId);
-                log.info("✅ Đã CLEAR tiền thành công!");
+                // (MULTI-LEG) KHÔNG CẦN GỌI clearMoney NỮA. Tiền đã được Debit khỏi tài khoản từ Bước 1 (Hold)
+                // và Credit sang người nhận ở Bước 2. Giao dịch đã hoàn tất và cân bằng!
 
                 transfer.setStatus(TransferStatus.COMPLETED);
                 transferRepository.save(transfer);
