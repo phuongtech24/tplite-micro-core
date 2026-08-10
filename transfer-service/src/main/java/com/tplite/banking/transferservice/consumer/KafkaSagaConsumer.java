@@ -33,6 +33,12 @@ public class KafkaSagaConsumer {
             Optional<Transfer> transferOpt = transferRepository.findById(UUID.fromString(transferId));
             if (transferOpt.isPresent()) {
                 Transfer transfer = transferOpt.get();
+                
+                // THỰC THI CLEAR TIỀN (Trừ tiền thật trên Ledger Balance)
+                log.info("🧹 Đang tiến hành CLEAR tiền (trừ tiền thật) cho tài khoản {}...", transfer.getFromAccount());
+                accountClient.clearMoney(transfer.getFromAccount(), transfer.getAmount());
+                log.info("✅ Đã CLEAR tiền thành công!");
+
                 transfer.setStatus(TransferStatus.COMPLETED);
                 transferRepository.save(transfer);
                 log.info("✅ Đã chốt giao dịch {} thành COMPLETED.", transferId);
@@ -57,13 +63,13 @@ public class KafkaSagaConsumer {
                 transfer.setDescription("Hoàn tiền do lỗi cộng tiền: " + reason);
                 transferRepository.save(transfer);
 
-                // THỰC THI GIAO DỊCH BÙ TRỪ (HOÀN TIỀN LẠI CHO NGƯỜI GỬI)
-                log.info("🔙 Đang tiến hành HOÀN TIỀN cho tài khoản {} số tiền {}...", transfer.getFromAccount(), transfer.getAmount());
-                accountClient.creditMoney(transfer.getFromAccount(), transfer.getAmount());
-                log.info("✅ Đã hoàn tiền thành công cho tài khoản {}!", transfer.getFromAccount());
+                // THỰC THI GIAO DỊCH BÙ TRỪ (RELEASE TIỀN ĐÓNG BĂNG LẠI CHO NGƯỜI GỬI)
+                log.info("🔙 Đang tiến hành RELEASE (nhả tiền đóng băng) cho tài khoản {} số tiền {}...", transfer.getFromAccount(), transfer.getAmount());
+                accountClient.releaseMoney(transfer.getFromAccount(), transfer.getAmount());
+                log.info("✅ Đã RELEASE tiền thành công cho tài khoản {}!", transfer.getFromAccount());
             }
         } catch (Exception e) {
-            log.error("Lỗi khi xử lý credit-failed (Có thể gây thất thoát tiền nếu không xử lý kỹ): {}", e.getMessage());
+            log.error("Lỗi khi xử lý credit-failed (Có thể gây giam tiền khách hàng nếu không xử lý kỹ): {}", e.getMessage());
         }
     }
 }

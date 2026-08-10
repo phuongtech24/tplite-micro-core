@@ -50,10 +50,10 @@ public class TransferServiceImpl implements TransferService {
                 .build();
         idempotencyKeyRepository.save(newKey);
 
-        // 2. GỌI SANG ACCOUNT SERVICE ĐỂ TRỪ TIỀN (Giao tiếp HTTP đồng bộ - SAGA Step 1)
+        // 2. GỌI SANG ACCOUNT SERVICE ĐỂ ĐÓNG BĂNG TIỀN (SAGA Step 1: HOLD)
         try {
-            ApiResponse<String> deductResponse = accountClient.deductMoney(fromAccount, amount);
-            if (!deductResponse.isSuccess()) {
+            ApiResponse<String> holdResponse = accountClient.holdMoney(fromAccount, amount);
+            if (!holdResponse.isSuccess()) {
                 throw new BusinessException(ErrorCode.TRANSFER_FAILED);
             }
         } catch (Exception e) {
@@ -77,11 +77,11 @@ public class TransferServiceImpl implements TransferService {
         event.setAggregateType("Transfer");
         event.setAggregateId(transfer.getId().toString());
         event.setType("credit-requested");
-        event.setPayload(String.format("{\"transferId\":\"%s\", \"toAccount\":\"%s\", \"amount\":%s}", 
-                transfer.getId(), toAccount, amount));
+        event.setPayload(String.format("{\"transferId\":\"%s\", \"fromAccount\":\"%s\", \"toAccount\":\"%s\", \"amount\":%s}", 
+                transfer.getId(), fromAccount, toAccount, amount));
         outboxEventRepository.save(event);
 
-        return "Giao dịch đang được xử lý (SAGA Step 1 thành công)!";
+        return "Giao dịch đang được xử lý (Đã đóng băng tiền thành công)!";
     }
 
     public String fallbackCreateTransfer(String idempotencyKeyStr, String fromAccount, String toAccount, BigDecimal amount, Throwable t) {

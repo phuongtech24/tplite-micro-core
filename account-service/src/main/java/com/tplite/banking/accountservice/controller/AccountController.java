@@ -16,6 +16,12 @@ public class AccountController {
 
     private final AccountService accountService;
 
+    @PostMapping
+    public ApiResponse<String> createAccount(@RequestParam java.util.UUID userId) {
+        String accountNumber = accountService.createAccount(userId);
+        return ApiResponse.success(accountNumber);
+    }
+
     @PostMapping("/{accountNumber}/hold")
     public ApiResponse<String> hold(@PathVariable String accountNumber, @RequestParam BigDecimal amount) {
         accountService.holdMoney(accountNumber, amount);

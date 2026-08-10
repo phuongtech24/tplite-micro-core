@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import com.tplite.banking.accountservice.entity.Account;
 
 public interface AccountService {
+    String createAccount(java.util.UUID userId);
     Account getAccountByNumber(String accountNumber);
     void holdMoney(String accountNumber, BigDecimal amount);
     void clearMoney(String accountNumber, BigDecimal amount);

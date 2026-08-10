@@ -14,11 +14,38 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import java.math.BigDecimal;
 
+import com.tplite.banking.accountservice.util.AccountNumberGenerator;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
     
     private final AccountRepository accountRepository;
+
+    @Override
+    @Transactional
+    public String createAccount(UUID userId) {
+        String accountNumber;
+        boolean exists;
+        // Đảm bảo account number sinh ra là duy nhất (rất khó trùng nhưng vẫn nên check)
+        do {
+            accountNumber = AccountNumberGenerator.generate();
+            exists = accountRepository.findByAccountNumber(accountNumber).isPresent();
+        } while (exists);
+
+        Account account = Account.builder()
+                .userId(userId)
+                .accountNumber(accountNumber)
+                .balance(BigDecimal.ZERO)
+                .frozenAmount(BigDecimal.ZERO)
+                .currency("VND")
+                .status(AccountStatus.ACTIVE)
+                .build();
+                
+        accountRepository.save(account);
+        return accountNumber;
+    }
 
     @Override
     @Cacheable(value = "account", key = "#accountNumber")

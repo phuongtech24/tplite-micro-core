@@ -12,11 +12,18 @@ import java.math.BigDecimal;
 @FeignClient(name = "account-service", path = "/api/v1/accounts")
 public interface AccountClient {
     
-    // Gọi sang API Trừ tiền (Bước 1 SAGA)
+    @PostMapping("/{accountNumber}/hold")
+    ApiResponse<String> holdMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+
+    @PostMapping("/{accountNumber}/clear")
+    ApiResponse<String> clearMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+
+    @PostMapping("/{accountNumber}/release")
+    ApiResponse<String> releaseMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+
     @PostMapping("/{accountNumber}/deduct")
     ApiResponse<String> deductMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
 
-    // Gọi sang API Cộng tiền (Dùng để Hoàn tiền - Compensating Transaction)
     @PostMapping("/{accountNumber}/credit")
     ApiResponse<String> creditMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
 }
