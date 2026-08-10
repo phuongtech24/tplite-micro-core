@@ -5,6 +5,7 @@ import lombok.Data;
 import java.util.UUID;
 
 import com.tplite.banking.common.entity.BaseEntity;
+import com.tplite.banking.identityservice.enums.EkycStatus;
 
 @Entity
 @Data
@@ -19,4 +20,14 @@ public class User extends BaseEntity {
 
     @Column(nullable = false)
     private String passwordHash;
+
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "id_card_number")
+    private String idCardNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ekyc_status", nullable = false)
+    private EkycStatus ekycStatus = EkycStatus.UNVERIFIED;
 }

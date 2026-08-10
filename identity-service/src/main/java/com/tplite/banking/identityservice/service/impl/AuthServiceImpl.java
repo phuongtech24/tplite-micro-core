@@ -16,6 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.tplite.banking.identityservice.dto.EkycVerifyRequest;
+import com.tplite.banking.identityservice.enums.EkycStatus;
+import com.tplite.banking.identityservice.service.EkycService;
+import com.tplite.banking.identityservice.client.AccountClient;
+import com.tplite.banking.common.dto.ApiResponse;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -34,6 +39,12 @@ public class AuthServiceImpl implements AuthService {
     
     @Autowired
     private JwtService jwtService;
+    
+    @Autowired
+    private EkycService ekycService;
+    
+    @Autowired
+    private AccountClient accountClient;
 
     @Transactional
     public String register(AuthRequest request) {
@@ -91,5 +102,36 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. Cấp Token chứa toàn bộ Quyền
         return jwtService.generateToken(user.getUsername(), authorities);
+    }
+
+    @Transactional
+    public String verifyEkyc(EkycVerifyRequest request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getEkycStatus() == EkycStatus.VERIFIED) {
+            throw new RuntimeException("Tài khoản đã được xác thực eKYC!");
+        }
+
+        boolean isMatched = ekycService.verifyIdentity(request.getIdCardUrl(), request.getSelfieUrl());
+        if (!isMatched) {
+            user.setEkycStatus(EkycStatus.FAILED);
+            userRepository.save(user);
+            throw new RuntimeException("Xác thực eKYC thất bại (Nghi ngờ giả mạo)!");
+        }
+
+        // Cập nhật thông tin eKYC
+        user.setFullName(request.getFullName());
+        user.setIdCardNumber(request.getIdCardNumber());
+        user.setEkycStatus(EkycStatus.VERIFIED);
+        userRepository.save(user);
+
+        // Gọi sang Account Service để tạo Số tài khoản TPBank
+        ApiResponse<String> response = accountClient.createAccount(user.getId());
+        if (response.isSuccess()) {
+            return "Xác thực eKYC thành công! Số tài khoản TPBank của bạn là: " + response.getData();
+        } else {
+            throw new RuntimeException("Lỗi khi mở tài khoản ngân hàng!");
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.tplite.banking.identityservice.controller;
 
 import com.tplite.banking.identityservice.dto.AuthRequest;
+import com.tplite.banking.identityservice.dto.EkycVerifyRequest;
 import com.tplite.banking.identityservice.service.AuthService;
 import com.tplite.banking.common.dto.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,12 @@ public class AuthController {
     public ApiResponse<String> login(@RequestBody AuthRequest request) {
         String token = authService.login(request);
         return ApiResponse.success("Đăng nhập thành công", token);
+    }
+
+    @PostMapping("/verify-ekyc")
+    public ApiResponse<String> verifyEkyc(@RequestBody EkycVerifyRequest request) {
+        String result = authService.verifyEkyc(request);
+        return ApiResponse.success(result);
     }
 
     @GetMapping("/me")
