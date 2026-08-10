@@ -7,6 +7,8 @@ import com.tplite.banking.accountservice.enums.TransactionType;
 import com.tplite.banking.accountservice.repository.AccountRepository;
 import com.tplite.banking.accountservice.repository.TransactionEntryRepository;
 import com.tplite.banking.accountservice.service.AccountService;
+import com.tplite.banking.accountservice.service.JournalService;
+import com.tplite.banking.accountservice.dto.JournalEntryDto;
 import com.tplite.banking.common.exception.BusinessException;
 import com.tplite.banking.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import com.tplite.banking.accountservice.util.AccountNumberGenerator;
 import java.util.UUID;
@@ -26,6 +29,10 @@ public class AccountServiceImpl implements AccountService {
     
     private final AccountRepository accountRepository;
     private final TransactionEntryRepository transactionEntryRepository;
+    private final JournalService journalService;
+
+    // Hằng số System GL Accounts
+    private static final String SUSPENSE_ACCOUNT = "299000";
 
     @Override
     @Transactional
@@ -61,67 +68,86 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
     public void holdMoney(String accountNumber, BigDecimal amount, String referenceId) {
-        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
-        account.hold(amount);
-        accountRepository.save(account);
+        // SAGA STEP 1: Khách hàng chuyển tiền đi
+        // Ghi Nợ (Trừ) Khách hàng, Ghi Có (Cộng) Tài khoản Treo (299000)
+        journalService.postJournal(referenceId, "Chuyển tiền vào tài khoản treo chờ xử lý", Arrays.asList(
+                JournalEntryDto.builder()
+                        .accountNumber(accountNumber)
+                        .type(TransactionType.DEBIT)
+                        .amount(amount)
+                        .build(),
+                JournalEntryDto.builder()
+                        .accountNumber(SUSPENSE_ACCOUNT)
+                        .type(TransactionType.CREDIT)
+                        .amount(amount)
+                        .build()
+        ));
     }
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
     public void clearMoney(String accountNumber, BigDecimal amount, String referenceId) {
-        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
-        account.clear(amount);
-        account = accountRepository.save(account);
-        
-        // Ghi sổ cái: DEBIT (Trừ tiền)
-        createTransactionEntry(account, TransactionType.DEBIT, amount, referenceId, "Hoàn tất chuyển tiền");
+        // HÀM NÀY KHÔNG CÒN Ý NGHĨA TRONG MULTI-LEG VÌ TIỀN ĐÃ NẰM Ở TÀI KHOẢN TREO.
+        // Khi creditMoney thành công thì tiền từ Treo đã chạy thẳng sang người nhận.
+        // Tuy nhiên để không break SAGA Transfer, ta tạm để log ở đây hoặc xóa gọi bên kia.
     }
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
     public void releaseMoney(String accountNumber, BigDecimal amount, String referenceId) {
-        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
-        account.release(amount);
-        accountRepository.save(account);
+        // SAGA COMPENSATING: Giao dịch lỗi
+        // Bút toán Đảo (Reversal): Nợ Tài khoản Treo, Có Khách hàng (Trả tiền lại)
+        journalService.postJournal(referenceId, "Hoàn tiền giao dịch lỗi (Bút toán đảo)", Arrays.asList(
+                JournalEntryDto.builder()
+                        .accountNumber(SUSPENSE_ACCOUNT)
+                        .type(TransactionType.REVERSAL_DEBIT)
+                        .amount(amount)
+                        .build(),
+                JournalEntryDto.builder()
+                        .accountNumber(accountNumber)
+                        .type(TransactionType.REVERSAL_CREDIT)
+                        .amount(amount)
+                        .build()
+        ));
     }
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
     public void creditMoney(String accountNumber, BigDecimal amount, String referenceId) {
-        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
-        account.credit(amount);
-        account = accountRepository.save(account);
-
-        // Ghi sổ cái: CREDIT (Cộng tiền)
-        createTransactionEntry(account, TransactionType.CREDIT, amount, referenceId, "Nhận tiền");
+        // SAGA STEP 2 (Thành công): Cộng tiền cho người nhận
+        // Ghi Nợ (Trừ) Tài khoản Treo, Ghi Có (Cộng) Khách hàng nhận
+        journalService.postJournal(referenceId, "Nhận tiền chuyển khoản", Arrays.asList(
+                JournalEntryDto.builder()
+                        .accountNumber(SUSPENSE_ACCOUNT)
+                        .type(TransactionType.DEBIT)
+                        .amount(amount)
+                        .build(),
+                JournalEntryDto.builder()
+                        .accountNumber(accountNumber)
+                        .type(TransactionType.CREDIT)
+                        .amount(amount)
+                        .build()
+        ));
     }
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
     public void deductMoney(String accountNumber, BigDecimal amount, String referenceId) {
-        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
-        account.deduct(amount);
-        account = accountRepository.save(account);
-
-        // Ghi sổ cái: DEBIT (Trừ tiền trực tiếp)
-        createTransactionEntry(account, TransactionType.DEBIT, amount, referenceId, "Trừ tiền trực tiếp");
-    }
-    
-    private void createTransactionEntry(Account account, TransactionType type, BigDecimal amount, String referenceId, String description) {
-        TransactionEntry entry = TransactionEntry.builder()
-                .accountNumber(account.getAccountNumber())
-                .type(type)
-                .amount(amount)
-                .balanceAfter(account.getBalance()) // Audit trail: số dư ngay sau giao dịch
-                .referenceId(referenceId)
-                .description(description)
-                .build();
-        transactionEntryRepository.save(entry);
+        // Ghi Nợ trực tiếp (Ít dùng, trừ thanh toán)
+        // Nếu làm chuẩn Multi-leg thì phải truyền thêm Credit account.
+        // Tạm thời fix cứng là Trừ Ví, Cộng Tài khoản phí (để API chạy được)
+        journalService.postJournal(referenceId, "Trừ tiền trực tiếp", Arrays.asList(
+                JournalEntryDto.builder()
+                        .accountNumber(accountNumber)
+                        .type(TransactionType.DEBIT)
+                        .amount(amount)
+                        .build(),
+                JournalEntryDto.builder()
+                        .accountNumber("701000") // Tiền chạy tạm vào Doanh Thu Phí
+                        .type(TransactionType.CREDIT)
+                        .amount(amount)
+                        .build()
+        ));
     }
 
     @Transactional
