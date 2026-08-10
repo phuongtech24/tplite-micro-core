@@ -49,7 +49,6 @@ public class AccountServiceImpl implements AccountService {
                 .userId(userId)
                 .accountNumber(accountNumber)
                 .balance(BigDecimal.ZERO)
-                .frozenAmount(BigDecimal.ZERO)
                 .currency("VND")
                 .status(AccountStatus.ACTIVE)
                 .build();

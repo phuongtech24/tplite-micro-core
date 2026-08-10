@@ -32,6 +32,9 @@ public class Account extends BaseEntity {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    @Column(nullable = false, length = 3)
+    private String currency = "VND";
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AccountStatus status = AccountStatus.ACTIVE;
