@@ -33,7 +33,7 @@ public class KafkaCreditConsumer {
 
             try {
                 // Thực hiện cộng tiền
-                accountService.creditMoney(toAccount, amount);
+                accountService.creditMoney(toAccount, amount, transferId);
                 log.info("✅ Cộng tiền thành công cho tài khoản: {}", toAccount);
                 
                 // Báo cáo thành công về Kafka

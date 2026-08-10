@@ -52,7 +52,7 @@ public class TransferServiceImpl implements TransferService {
 
         // 2. GỌI SANG ACCOUNT SERVICE ĐỂ ĐÓNG BĂNG TIỀN (SAGA Step 1: HOLD)
         try {
-            ApiResponse<String> holdResponse = accountClient.holdMoney(fromAccount, amount);
+            ApiResponse<String> holdResponse = accountClient.holdMoney(fromAccount, amount, idempotencyKeyStr);
             if (!holdResponse.isSuccess()) {
                 throw new BusinessException(ErrorCode.TRANSFER_FAILED);
             }

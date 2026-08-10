@@ -13,17 +13,17 @@ import java.math.BigDecimal;
 public interface AccountClient {
     
     @PostMapping("/{accountNumber}/hold")
-    ApiResponse<String> holdMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+    ApiResponse<String> holdMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount, @RequestParam(value = "referenceId", required = false) String referenceId);
 
     @PostMapping("/{accountNumber}/clear")
-    ApiResponse<String> clearMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+    ApiResponse<String> clearMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount, @RequestParam(value = "referenceId", required = false) String referenceId);
 
     @PostMapping("/{accountNumber}/release")
-    ApiResponse<String> releaseMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+    ApiResponse<String> releaseMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount, @RequestParam(value = "referenceId", required = false) String referenceId);
 
     @PostMapping("/{accountNumber}/deduct")
-    ApiResponse<String> deductMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+    ApiResponse<String> deductMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount, @RequestParam(value = "referenceId", required = false) String referenceId);
 
     @PostMapping("/{accountNumber}/credit")
-    ApiResponse<String> creditMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount);
+    ApiResponse<String> creditMoney(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount, @RequestParam(value = "referenceId", required = false) String referenceId);
 }

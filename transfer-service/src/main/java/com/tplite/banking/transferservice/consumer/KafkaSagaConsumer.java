@@ -36,7 +36,7 @@ public class KafkaSagaConsumer {
                 
                 // THỰC THI CLEAR TIỀN (Trừ tiền thật trên Ledger Balance)
                 log.info("🧹 Đang tiến hành CLEAR tiền (trừ tiền thật) cho tài khoản {}...", transfer.getFromAccount());
-                accountClient.clearMoney(transfer.getFromAccount(), transfer.getAmount());
+                accountClient.clearMoney(transfer.getFromAccount(), transfer.getAmount(), transferId);
                 log.info("✅ Đã CLEAR tiền thành công!");
 
                 transfer.setStatus(TransferStatus.COMPLETED);
@@ -65,7 +65,7 @@ public class KafkaSagaConsumer {
 
                 // THỰC THI GIAO DỊCH BÙ TRỪ (RELEASE TIỀN ĐÓNG BĂNG LẠI CHO NGƯỜI GỬI)
                 log.info("🔙 Đang tiến hành RELEASE (nhả tiền đóng băng) cho tài khoản {} số tiền {}...", transfer.getFromAccount(), transfer.getAmount());
-                accountClient.releaseMoney(transfer.getFromAccount(), transfer.getAmount());
+                accountClient.releaseMoney(transfer.getFromAccount(), transfer.getAmount(), transferId);
                 log.info("✅ Đã RELEASE tiền thành công cho tài khoản {}!", transfer.getFromAccount());
             }
         } catch (Exception e) {

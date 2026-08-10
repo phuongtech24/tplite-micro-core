@@ -1,8 +1,11 @@
 package com.tplite.banking.accountservice.service.impl;
 
 import com.tplite.banking.accountservice.entity.Account;
+import com.tplite.banking.accountservice.entity.TransactionEntry;
 import com.tplite.banking.accountservice.enums.AccountStatus;
+import com.tplite.banking.accountservice.enums.TransactionType;
 import com.tplite.banking.accountservice.repository.AccountRepository;
+import com.tplite.banking.accountservice.repository.TransactionEntryRepository;
 import com.tplite.banking.accountservice.service.AccountService;
 import com.tplite.banking.common.exception.BusinessException;
 import com.tplite.banking.common.exception.ErrorCode;
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class AccountServiceImpl implements AccountService {
     
     private final AccountRepository accountRepository;
+    private final TransactionEntryRepository transactionEntryRepository;
 
     @Override
     @Transactional
@@ -56,7 +60,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
-    public void holdMoney(String accountNumber, BigDecimal amount) {
+    public void holdMoney(String accountNumber, BigDecimal amount, String referenceId) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         account.hold(amount);
@@ -65,16 +69,19 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
-    public void clearMoney(String accountNumber, BigDecimal amount) {
+    public void clearMoney(String accountNumber, BigDecimal amount, String referenceId) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         account.clear(amount);
-        accountRepository.save(account);
+        account = accountRepository.save(account);
+        
+        // Ghi sổ cái: DEBIT (Trừ tiền)
+        createTransactionEntry(account, TransactionType.DEBIT, amount, referenceId, "Hoàn tất chuyển tiền");
     }
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
-    public void releaseMoney(String accountNumber, BigDecimal amount) {
+    public void releaseMoney(String accountNumber, BigDecimal amount, String referenceId) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         account.release(amount);
@@ -83,20 +90,38 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
-    public void creditMoney(String accountNumber, BigDecimal amount) {
+    public void creditMoney(String accountNumber, BigDecimal amount, String referenceId) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         account.credit(amount);
-        accountRepository.save(account);
+        account = accountRepository.save(account);
+
+        // Ghi sổ cái: CREDIT (Cộng tiền)
+        createTransactionEntry(account, TransactionType.CREDIT, amount, referenceId, "Nhận tiền");
     }
 
     @Transactional
     @CacheEvict(value = "account", key = "#accountNumber")
-    public void deductMoney(String accountNumber, BigDecimal amount) {
+    public void deductMoney(String accountNumber, BigDecimal amount, String referenceId) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         account.deduct(amount);
-        accountRepository.save(account);
+        account = accountRepository.save(account);
+
+        // Ghi sổ cái: DEBIT (Trừ tiền trực tiếp)
+        createTransactionEntry(account, TransactionType.DEBIT, amount, referenceId, "Trừ tiền trực tiếp");
+    }
+    
+    private void createTransactionEntry(Account account, TransactionType type, BigDecimal amount, String referenceId, String description) {
+        TransactionEntry entry = TransactionEntry.builder()
+                .accountNumber(account.getAccountNumber())
+                .type(type)
+                .amount(amount)
+                .balanceAfter(account.getBalance()) // Audit trail: số dư ngay sau giao dịch
+                .referenceId(referenceId)
+                .description(description)
+                .build();
+        transactionEntryRepository.save(entry);
     }
 
     @Transactional
