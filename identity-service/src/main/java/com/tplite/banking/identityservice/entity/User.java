@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.tplite.banking.common.entity.BaseEntity;
 import com.tplite.banking.identityservice.enums.EkycStatus;
+import com.tplite.banking.identityservice.enums.UserStatus;
 
 @Entity
 @Data
@@ -30,4 +31,8 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "ekyc_status", nullable = false)
     private EkycStatus ekycStatus = EkycStatus.UNVERIFIED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
 }

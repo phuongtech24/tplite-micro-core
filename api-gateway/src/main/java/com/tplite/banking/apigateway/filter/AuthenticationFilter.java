@@ -56,9 +56,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                     .header("X-User-Roles", roles)
                     .build();
 
-            // KỂM TRA QUYỀN (RBAC - TRAM KIỂM SOÁT TẠI CỔNG)
+            // KIỂM TRA QUYỀN (RBAC - TRAM KIỂM SOÁT TẠI CỔNG)
             String path = request.getURI().getPath();
-            if (path.contains("/trial-balance")) {
+            if (path.contains("/trial-balance") || path.contains("/api/v1/admin")) {
                 if (!roles.contains("ROLE_ADMIN")) {
                     exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN); // 403 Forbidden
                     return exchange.getResponse().setComplete();

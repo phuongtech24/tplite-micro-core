@@ -77,6 +77,10 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        if (user.getStatus() == com.tplite.banking.identityservice.enums.UserStatus.LOCKED) {
+            throw new BusinessException(ErrorCode.USER_LOCKED);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }

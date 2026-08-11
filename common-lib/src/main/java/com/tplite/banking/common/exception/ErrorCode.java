@@ -14,6 +14,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "AUTH_002", "Không tìm thấy người dùng"),
     INVALID_PASSWORD(400, "AUTH_003", "Sai mật khẩu"),
     UNAUTHORIZED(401, "AUTH_004", "Không có quyền truy cập"),
+    USER_LOCKED(403, "AUTH_005", "Tài khoản của bạn đã bị khóa bởi Admin"),
+
     
     // Account Errors
     INSUFFICIENT_BALANCE(400, "ACC_001", "Số dư khả dụng không đủ"),
