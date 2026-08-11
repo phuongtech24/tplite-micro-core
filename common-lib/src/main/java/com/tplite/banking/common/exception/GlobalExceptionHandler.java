@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @Slf4j
 @RestControllerAdvice
@@ -57,7 +58,14 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, "BAD_REQUEST", ex.getMessage(), request);
     }
 
-    // 5. Lỗi Hệ thống Không lường trước (Lỗi 500)
+    // 5. Lỗi Đồng thời (Concurrency) - Optimistic Lock
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex, HttpServletRequest request) {
+        log.warn("Optimistic locking failure at {}: {}", request.getRequestURI(), ex.getMessage());
+        return buildError(HttpStatus.CONFLICT, "CONCURRENCY_ERROR", "Dữ liệu đã bị người khác thay đổi, vui lòng tải lại trang (F5) và thử lại.", request);
+    }
+
+    // 6. Lỗi Hệ thống Không lường trước (Lỗi 500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex, HttpServletRequest request) {
         log.error("Unexpected error at {}", request.getRequestURI(), ex);
