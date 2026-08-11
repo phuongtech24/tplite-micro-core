@@ -23,6 +23,9 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import com.tplite.banking.transferservice.specification.TransferSpecification;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -99,5 +102,56 @@ public class TransferServiceImpl implements TransferService {
     @Transactional(readOnly = true)
     public long countTransactionsByDateRange(String accountNumber, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
         return transferRepository.countTransactionsByDateRange(accountNumber, startDate, endDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Transfer> getTransactionHistoryWithFilter(
+            String accountNumber, BigDecimal minAmount, BigDecimal maxAmount, 
+            java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, 
+            TransferStatus status, int page, int size) {
+        
+        Specification<Transfer> spec = Specification.where(TransferSpecification.involvesAccount(accountNumber))
+                .and(TransferSpecification.amountBetween(minAmount, maxAmount))
+                .and(TransferSpecification.dateBetween(startDate, endDate))
+                .and(TransferSpecification.statusEquals(status));
+                
+        Pageable pageable = PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdAt").descending());
+        return transferRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String exportToCsv(
+            String accountNumber, BigDecimal minAmount, BigDecimal maxAmount, 
+            java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, 
+            TransferStatus status) {
+            
+        Specification<Transfer> spec = Specification.where(TransferSpecification.involvesAccount(accountNumber))
+                .and(TransferSpecification.amountBetween(minAmount, maxAmount))
+                .and(TransferSpecification.dateBetween(startDate, endDate))
+                .and(TransferSpecification.statusEquals(status));
+                
+        // Lấy tất cả dữ liệu thỏa mãn bộ lọc (Không phân trang)
+        List<Transfer> transfers = transferRepository.findAll(spec, org.springframework.data.domain.Sort.by("createdAt").descending());
+        
+        StringBuilder csv = new StringBuilder();
+        // Header
+        csv.append("ID Giao dich,Nguoi gui,Nguoi nhan,So tien,Tien te,Trang thai,Noi dung,Ngay tao\n");
+        
+        // Data
+        for (Transfer t : transfers) {
+            csv.append(t.getId()).append(",")
+               .append(t.getFromAccount()).append(",")
+               .append(t.getToAccount()).append(",")
+               .append(t.getAmount()).append(",")
+               .append(t.getCurrency()).append(",")
+               .append(t.getStatus()).append(",")
+               .append("\"").append(t.getDescription() != null ? t.getDescription().replace("\"", "\"\"") : "").append("\",")
+               .append(t.getCreatedAt())
+               .append("\n");
+        }
+        
+        return csv.toString();
     }
 }
