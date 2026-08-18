@@ -1,4 +1,4 @@
-﻿package com.tplite.banking.discoveryserver;
+package com.tplite.banking.discoveryserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

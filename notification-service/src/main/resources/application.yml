@@ -1,0 +1,18 @@
+server:
+  port: 8084 # Port dành cho Notification Service
+
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: localhost:9092 # Địa chỉ của máy chủ Kafka
+    consumer:
+      group-id: notification-group # Nhóm những người nhận thư (để Kafka chia việc)
+      auto-offset-reset: earliest # Nếu mới bật lên, đọc lại thư từ đầu (nếu có)
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

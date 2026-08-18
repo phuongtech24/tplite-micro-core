@@ -1,0 +1,29 @@
+server:
+  port: 8081 # Port dành riêng cho Identity
+
+spring:
+  application:
+    name: identity-service
+    
+  # Cấu hình Database Oracle 23c Free
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: identity_db
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: update # Bật Hibernate tự tạo bảng cho Oracle
+    show-sql: true
+    
+  flyway:
+    enabled: false # Tạm tắt Flyway vì script hiện tại không tương thích Oracle
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: ${JWT_SECRET}
